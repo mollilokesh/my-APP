@@ -1,30 +1,41 @@
 import streamlit as st
 import pandas as pd
-import os
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 # -----------------------------
-# Load Dataset (Fixed)
+# Load Dataset
 # -----------------------------
 @st.cache_data
 def load_data():
+    data = pd.read_csv(r"C:\Users\molli\Downloads\diabetes (2).csv")
 
-    data = data = pd.read_csv(r"C:\Users\molli\Downloads\diabetes (2).csv")
+    # Fix zero values
+    cols = ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]
+    for col in cols:
+        data[col] = data[col].replace(0, data[col].median())
+
     return data
 
 data = load_data()
 
 # -----------------------------
-# Train Model
+# Prepare Data
 # -----------------------------
 X = data.drop("Outcome", axis=1)
 y = data["Outcome"]
 
+# Scale data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
+    X_scaled, y, test_size=0.2, random_state=42
 )
 
+# Train model
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train, y_train)
 
@@ -42,6 +53,9 @@ bmi = st.number_input("BMI", 0.0, 70.0, 25.0)
 dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0, 0.5)
 age = st.number_input("Age", 1, 120, 30)
 
+# -----------------------------
+# Prediction
+# -----------------------------
 if st.button("Predict"):
     input_data = pd.DataFrame(
         [[pregnancies, glucose, blood_pressure, skin_thickness,
@@ -49,9 +63,11 @@ if st.button("Predict"):
         columns=X.columns
     )
 
-    prediction = model.predict(input_data)
+    input_scaled = scaler.transform(input_data)
 
-    if prediction[0] == 1:
+    prediction = model.predict(input_scaled)[0]
+
+    if prediction == 1:
         st.error("⚠️ Diabetes Detected")
     else:
-        st.success("✅ No Diabetes")
+        st.success("✅ No Diabetes")j
