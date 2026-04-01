@@ -70,4 +70,4 @@ if st.button("Predict"):
     if prediction == 1:
         st.error("⚠️ Diabetes Detected")
     else:
-        st.success("✅ No Diabetes")j
+        st.success("✅ No Diabetes")
